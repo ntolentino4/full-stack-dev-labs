@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixell River Employee Directory</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script defer src="app.js"></script>
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="brand">
+        <a href="#" class="logo-link" aria-label="Pixell River Financial home">
+          <img
+            src="assets/pixell-river-logo.png"
+            alt="Pixell River Financial logo"
+            class="logo"
+          />
+        </a>
+
+        <div class="brand-text">
+          <h1>Pixell River Employee Directory</h1>
+          <p class="greeting">Welcome! Browse employees by department.</p>
+        </div>
+      </div>
+    </header>
+
+    <main id="app" class="container" aria-live="polite">
+      <!-- JS will inject department sections + employee lists here -->
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        Copyright Pixell River Financial
+        <span id="year"></span>.
+      </p>
+    </footer>
+  </body>
+</html>
