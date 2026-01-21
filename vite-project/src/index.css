@@ -1,0 +1,67 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  color: #333;
+  margin: 0.3em;
+  padding: 0.3em;
+  line-height: 1.6;
+}
+
+main {
+  background-color: lightgray;
+  max-width: 75%;
+  margin: auto;
+  padding: 1em;
+}
+
+/* Header */
+.site-header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1em;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+}
+
+.logo {
+  width: 70px;
+  height: auto;
+}
+
+h1,
+h2 {
+  color: #444;
+  margin: 0.2em 0;
+}
+
+h2 {
+  font-size: 1em;
+}
+
+/* Department Sections */
+.department {
+  background-color: #fff;
+  margin: 1em 0;
+  padding: 1em;
+  border-radius: 8px;
+}
+
+.employee-list {
+  padding-left: 1.5em;
+}
+
+.employee-list li {
+  margin: 0.3em 0;
+}
+
+/* Footer */
+.site-footer {
+  position: fixed;
+  bottom: 0;
+  right: 1em;
+  font-size: 0.9em;
+}
