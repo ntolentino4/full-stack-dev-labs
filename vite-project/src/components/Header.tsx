@@ -9,7 +9,7 @@ export function Header({ title, message }: HeaderProps) {
       <div className="brand">
         <img
           className="logo"
-          src="/pixell-river-logo.svg"
+          src="/pixell-river-logo.png"
           alt="Pixell River Financial logo"
         />
         <div>
