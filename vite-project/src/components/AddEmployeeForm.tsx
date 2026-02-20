@@ -1,98 +1,90 @@
-import { useEffect, useState, type FormEvent } from "react";
-import type { Employee } from "../types/directory";
+import type { FormEvent } from "react";
+import { useFormInput } from "../hooks/userFormInput";
+import * as EmployeeService from "../services/employeeService";
 
 type Props = {
-  departments: string[];
-  onAddEmployee: (employee: Employee) => void;
+  onCreated: () => void;
 };
 
-export function AddEmployeeForm({ departments, onAddEmployee }: Props) {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [department, setDepartment] = useState(departments[0] ?? "");
-  const [errors, setErrors] = useState<string[]>([]);
+export function AddEmployeeForm({ onCreated }: Props) {
+  const departments = EmployeeService.fetchDepartments();
+  const defaultDepartment = departments[0] ?? "";
 
-  useEffect(() => {
-    // keep department valid if departments list changes
-    if (!departments.includes(department)) {
-      setDepartment(departments[0] ?? "");
-    }
-  }, [departments, department]);
-
-  function validate(): string[] {
-    const next: string[] = [];
-
-    if (firstName.trim().length < 3) {
-      next.push("First name must be at least 3 characters.");
-    }
-
-    if (!departments.includes(department)) {
-      next.push("Please select an existing department.");
-    }
-
-    return next;
-  }
+  const firstName = useFormInput("");
+  const lastName = useFormInput("");
+  const department = useFormInput(defaultDepartment);
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    // clear old messages on submit
-    setErrors([]);
+    // Hook-level required checks
+    const firstRequired = firstName.validate((v) =>
+      v.trim().length
+        ? { isValid: true }
+        : { isValid: false, errors: ["First name is required."] }
+    );
 
-    const validationErrors = validate();
-    if (validationErrors.length > 0) {
-      setErrors(validationErrors);
+    const deptRequired = department.validate((v) =>
+      v.trim().length
+        ? { isValid: true }
+        : { isValid: false, errors: ["Department is required."] }
+    );
+
+    if (!firstRequired.isValid || !deptRequired.isValid) return;
+
+    // Service-level business validation + repo creation
+    const result = EmployeeService.createEmployee({
+      firstName: firstName.value,
+      lastName: lastName.value,
+      department: department.value,
+    });
+
+    if (!result.isValid) {
+      if (result.field === "firstName") firstName.setMessages(result.errors);
+      if (result.field === "department") department.setMessages(result.errors);
       return;
     }
 
-    const newEmployee: Employee = {
-      firstName: firstName.trim(),
-      lastName: lastName.trim() ? lastName.trim() : undefined,
-      department,
-    };
-
-    onAddEmployee(newEmployee);
-
-    // reset form
-    setFirstName("");
-    setLastName("");
-    setDepartment(departments[0] ?? "");
+    // Reset + refresh
+    firstName.setValue("");
+    lastName.setValue("");
+    department.setValue(defaultDepartment);
+    onCreated();
   }
 
   return (
     <section style={{ marginTop: "2rem" }}>
       <h2>Add Employee</h2>
 
-      {errors.length > 0 && (
-        <ul role="alert">
-          {errors.map((msg) => (
-            <li key={msg}>{msg}</li>
-          ))}
-        </ul>
-      )}
-
       <form onSubmit={handleSubmit}>
         <label>
           First Name
           <input
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
+            value={firstName.value}
+            onChange={(e) => firstName.setValue(e.target.value)}
           />
         </label>
+        {firstName.messages.length > 0 && (
+          <ul role="alert">
+            {firstName.messages.map((msg) => (
+              <li key={msg}>{msg}</li>
+            ))}
+          </ul>
+        )}
 
         <label>
           Last Name (optional)
           <input
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
+            value={lastName.value}
+            onChange={(e) => lastName.setValue(e.target.value)}
           />
         </label>
 
         <label>
           Department
           <select
-            value={department}
-            onChange={(e) => setDepartment(e.target.value)}
+            value={department.value}
+            onChange={(e) => department.setValue(e.target.value)}
           >
             {departments.map((d) => (
               <option key={d} value={d}>
@@ -101,6 +93,13 @@ export function AddEmployeeForm({ departments, onAddEmployee }: Props) {
             ))}
           </select>
         </label>
+        {department.messages.length > 0 && (
+          <ul role="alert">
+            {department.messages.map((msg) => (
+              <li key={msg}>{msg}</li>
+            ))}
+          </ul>
+        )}
 
         <button type="submit">Add</button>
       </form>

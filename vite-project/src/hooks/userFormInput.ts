@@ -1,11 +1,5 @@
 import { useState } from "react";
 
-/**
- * Form input should manage the following
- *  - current value
- *  - current messages 
- *  - validation via a callback function
- */
 export type ValidationResult =
   | { isValid: true }
   | { isValid: false; errors: string[] };
