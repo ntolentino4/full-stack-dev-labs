@@ -17,7 +17,7 @@ export function AddEmployeeForm({ onCreated }: Props) {
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    
+    // Hook-level required checks (each input controls its own messages)
     const firstRequired = firstName.validate((v) =>
       v.trim().length
         ? { isValid: true }
@@ -32,7 +32,7 @@ export function AddEmployeeForm({ onCreated }: Props) {
 
     if (!firstRequired.isValid || !deptRequired.isValid) return;
 
-    
+    // Service-level business validation + repo creation
     const result = EmployeeService.createEmployee({
       firstName: firstName.value,
       lastName: lastName.value,
@@ -45,7 +45,7 @@ export function AddEmployeeForm({ onCreated }: Props) {
       return;
     }
 
-    
+    // Reset + refresh
     firstName.setValue("");
     lastName.setValue("");
     department.setValue(defaultDepartment);
