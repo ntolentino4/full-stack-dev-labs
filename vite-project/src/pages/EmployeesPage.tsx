@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import employeesData from "../data/employees.json";
 import type { Department, Employee } from "../types/directory";
 import { DepartmentSection } from "../components/DepartmentSection";
 import { AddEmployeeForm } from "../components/AddEmployeeForm";
+import * as EmployeeService from "../services/employeeService";
 
 function groupByDepartment(employees: Employee[]): Department[] {
   const map = new Map<string, Department>();
+
   for (const emp of employees) {
     if (!map.has(emp.department)) {
       map.set(emp.department, { name: emp.department, employees: [] });
@@ -15,17 +16,18 @@ function groupByDepartment(employees: Employee[]): Department[] {
       lastName: emp.lastName,
     });
   }
-  const departments = Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
-  return departments;
+
+  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export function EmployeesPage() {
-  const [employees, setEmployees] = useState<Employee[]>(employeesData as Employee[]);
-  const departments = useMemo(() => groupByDepartment(employees), [employees]);
-  const departmentNames = useMemo(() => departments.map((d) => d.name), [departments]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  function addEmployee(emp: Employee) {
-    setEmployees((prev) => [...prev, emp]);
+  const employees = useMemo(() => EmployeeService.fetchEmployees(), [refreshKey]);
+  const departments = useMemo(() => groupByDepartment(employees), [employees]);
+
+  function refresh() {
+    setRefreshKey((k) => k + 1);
   }
 
   return (
@@ -34,7 +36,7 @@ export function EmployeesPage() {
         <DepartmentSection key={dept.name} department={dept} />
       ))}
 
-      <AddEmployeeForm departments={departmentNames} onAddEmployee={addEmployee} />
+      <AddEmployeeForm onCreated={refresh} />
     </main>
   );
 }
