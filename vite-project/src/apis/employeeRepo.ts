@@ -1,23 +1,39 @@
-import employeesJson from "../data/employees.json";
 import type { Employee } from "../types/directory";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-let employees: Employee[] = [...(employeesJson as Employee[])];
+async function handleJson<T>(response: Response): Promise<T> {
+  const data = await response.json();
 
+  if (!response.ok) {
+    throw data;
+  }
 
-const departments: string[] = Array.from(new Set(employees.map((e) => e.department))).sort(
-  (a, b) => a.localeCompare(b)
-);
-
-export function fetchEmployees(): Employee[] {
-  return employees;
+  return data as T;
 }
 
-export function fetchDepartments(): string[] {
-  return departments;
+export async function fetchEmployees(): Promise<Employee[]> {
+  const response = await fetch(`${API_BASE_URL}/employees`);
+  return handleJson<Employee[]>(response);
 }
 
-export function createEmployee(employee: Employee): Employee {
-  employees = [...employees, employee];
-  return employee;
+export async function fetchDepartments(): Promise<string[]> {
+  const response = await fetch(`${API_BASE_URL}/employees/departments`);
+  return handleJson<string[]>(response);
+}
+
+export async function createEmployee(args: {
+  firstName: string;
+  lastName?: string;
+  department: string;
+}) {
+  const response = await fetch(`${API_BASE_URL}/employees`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(args),
+  });
+
+  return handleJson(response);
 }

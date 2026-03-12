@@ -6,13 +6,11 @@ export function useRoleForm() {
   const lastName = useFormInput("");
   const role = useFormInput("");
 
-  function tryCreateRole(): { isValid: boolean } {
-    // Clear old messages
+  async function tryCreateRole(): Promise<{ isValid: boolean }> {
     firstName.setMessages([]);
     lastName.setMessages([]);
     role.setMessages([]);
 
-    // Hook-level required checks
     const firstReq = firstName.validate((v) =>
       v.trim().length
         ? { isValid: true }
@@ -25,27 +23,45 @@ export function useRoleForm() {
         : { isValid: false, errors: ["Role is required."] }
     );
 
-    if (!firstReq.isValid || !roleReq.isValid) return { isValid: false };
-
-    // Service-level business validation + repo creation
-    const result = RoleService.createRole({
-      firstName: firstName.value,
-      lastName: lastName.value,
-      role: role.value,
-    });
-
-    if (!result.isValid) {
-      if (result.field === "firstName") firstName.setMessages(result.errors);
-      if (result.field === "role") role.setMessages(result.errors);
+    if (!firstReq.isValid || !roleReq.isValid) {
       return { isValid: false };
     }
 
-    // Reset
-    firstName.setValue("");
-    lastName.setValue("");
-    role.setValue("");
+    try {
+      await RoleService.createRole({
+        firstName: firstName.value,
+        lastName: lastName.value,
+        role: role.value,
+      });
 
-    return { isValid: true };
+      firstName.setValue("");
+      lastName.setValue("");
+      role.setValue("");
+
+      return { isValid: true };
+    } catch (error: unknown) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "field" in error &&
+        "errors" in error
+      ) {
+        const apiError = error as {
+          field?: string;
+          errors?: string[];
+        };
+
+        if (apiError.field === "firstName") {
+          firstName.setMessages(apiError.errors ?? []);
+        }
+
+        if (apiError.field === "role") {
+          role.setMessages(apiError.errors ?? []);
+        }
+      }
+
+      return { isValid: false };
+    }
   }
 
   return { firstName, lastName, role, tryCreateRole };

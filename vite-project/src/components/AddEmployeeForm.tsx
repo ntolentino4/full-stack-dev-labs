@@ -1,4 +1,4 @@
-import type { FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useFormInput } from "../hooks/userFormInput";
 import * as EmployeeService from "../services/employeeService";
 
@@ -7,17 +7,27 @@ type Props = {
 };
 
 export function AddEmployeeForm({ onCreated }: Props) {
-  const departments = EmployeeService.fetchDepartments();
-  const defaultDepartment = departments[0] ?? "";
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(true);
 
   const firstName = useFormInput("");
   const lastName = useFormInput("");
-  const department = useFormInput(defaultDepartment);
+  const department = useFormInput("");
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    async function loadDepartments() {
+      const data = await EmployeeService.fetchDepartments();
+      setDepartments(data);
+      department.setValue(data[0] ?? "");
+      setLoadingDepartments(false);
+    }
+
+    loadDepartments();
+  }, []);
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    // Hook-level required checks (each input controls its own messages)
     const firstRequired = firstName.validate((v) =>
       v.trim().length
         ? { isValid: true }
@@ -32,24 +42,46 @@ export function AddEmployeeForm({ onCreated }: Props) {
 
     if (!firstRequired.isValid || !deptRequired.isValid) return;
 
-    // Service-level business validation + repo creation
-    const result = EmployeeService.createEmployee({
-      firstName: firstName.value,
-      lastName: lastName.value,
-      department: department.value,
-    });
+    try {
+      await EmployeeService.createEmployee({
+        firstName: firstName.value,
+        lastName: lastName.value,
+        department: department.value,
+      });
 
-    if (!result.isValid) {
-      if (result.field === "firstName") firstName.setMessages(result.errors);
-      if (result.field === "department") department.setMessages(result.errors);
-      return;
+      firstName.setValue("");
+      lastName.setValue("");
+      department.setValue(departments[0] ?? "");
+      onCreated();
+    } catch (error: unknown) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "field" in error &&
+    "errors" in error
+  ) {
+    const apiError = error as {
+      field?: string;
+      errors?: string[];
+    };
+
+    if (apiError.field === "firstName") {
+      firstName.setMessages(apiError.errors ?? []);
     }
 
-    // Reset + refresh
-    firstName.setValue("");
-    lastName.setValue("");
-    department.setValue(defaultDepartment);
-    onCreated();
+    if (apiError.field === "department") {
+      department.setMessages(apiError.errors ?? []);
+    }
+  }
+}
+  }
+
+  if (loadingDepartments) {
+    return (
+      <section style={{ marginTop: "2rem" }}>
+        <p>Loading departments...</p>
+      </section>
+    );
   }
 
   return (
