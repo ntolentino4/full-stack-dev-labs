@@ -8,11 +8,15 @@ type Props = {
 export function AddRoleForm({ onCreated }: Props) {
   const form = useRoleForm();
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const result = form.tryCreateRole();
-    if (result.isValid) onCreated();
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+
+  const result = await form.tryCreateRole();
+
+  if (result.isValid) {
+    onCreated();
   }
+}
 
   return (
     <section style={{ marginTop: "2rem" }}>

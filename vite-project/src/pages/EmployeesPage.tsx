@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Department, Employee } from "../types/directory";
 import { DepartmentSection } from "../components/DepartmentSection";
 import { AddEmployeeForm } from "../components/AddEmployeeForm";
@@ -11,6 +11,7 @@ function groupByDepartment(employees: Employee[]): Department[] {
     if (!map.has(emp.department)) {
       map.set(emp.department, { name: emp.department, employees: [] });
     }
+
     map.get(emp.department)!.employees.push({
       firstName: emp.firstName,
       lastName: emp.lastName,
@@ -21,9 +22,18 @@ function groupByDepartment(employees: Employee[]): Department[] {
 }
 
 export function EmployeesPage() {
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const employees = useMemo(() => EmployeeService.fetchEmployees(), [refreshKey]);
+  useEffect(() => {
+    async function loadEmployees() {
+      const data = await EmployeeService.fetchEmployees();
+      setEmployees(data);
+    }
+
+    loadEmployees();
+  }, [refreshKey]);
+
   const departments = useMemo(() => groupByDepartment(employees), [employees]);
 
   function refresh() {

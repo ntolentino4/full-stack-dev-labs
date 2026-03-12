@@ -1,22 +1,34 @@
-import { roles } from "../data/roles";
 import type { Role } from "../types/role";
 
-// mock database
-let roleData: Role[] = [...roles];
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-// Get all roles
-export function fetchRoles(): Role[] {
-  return roleData;
+async function handleJson<T>(response: Response): Promise<T> {
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw data;
+  }
+
+  return data as T;
 }
 
-// Checks role if already occupied
-export function isRoleOccupied(role: string): boolean {
-  const normalized = role.trim().toLowerCase();
-  return roleData.some((r) => r.role.trim().toLowerCase() === normalized);
+export async function fetchRoles(): Promise<Role[]> {
+  const response = await fetch(`${API_BASE_URL}/roles`);
+  return handleJson<Role[]>(response);
 }
 
-// Creates a new role entry
-export function createRole(newRole: Role): Role {
-  roleData = [...roleData, newRole];
-  return newRole;
+export async function createRole(args: {
+  firstName: string;
+  lastName?: string;
+  role: string;
+}) {
+  const response = await fetch(`${API_BASE_URL}/roles`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(args),
+  });
+
+  return handleJson(response);
 }
