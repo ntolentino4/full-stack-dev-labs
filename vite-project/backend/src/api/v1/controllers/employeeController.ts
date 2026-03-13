@@ -1,15 +1,17 @@
 import type { Request, Response } from "express";
 import * as EmployeeService from "../services/employeeService";
 
-export function getEmployees(_req: Request, res: Response) {
-  res.json(EmployeeService.fetchEmployees());
+export async function getEmployees(_req: Request, res: Response) {
+  const employees = await EmployeeService.fetchEmployees();
+  res.json(employees);
 }
 
-export function getDepartments(_req: Request, res: Response) {
-  res.json(EmployeeService.fetchDepartments());
+export async function getDepartments(_req: Request, res: Response) {
+  const departments = await EmployeeService.fetchDepartments();
+  res.json(departments);
 }
 
-export function postEmployee(req: Request, res: Response) {
+export async function postEmployee(req: Request, res: Response) {
   const { firstName, lastName, department } = req.body ?? {};
 
   if (typeof firstName !== "string" || typeof department !== "string") {
@@ -19,7 +21,7 @@ export function postEmployee(req: Request, res: Response) {
     });
   }
 
-  const result = EmployeeService.createEmployee({
+  const result = await EmployeeService.createEmployee({
     firstName,
     lastName,
     department,
