@@ -1,22 +1,54 @@
-import employeesJson from "../../../data/employees.json";
+import prisma from "../../../../prisma/client";
 import type { Employee } from "../../../types/directory";
 
-// mock database
-let employees: Employee[] = [...(employeesJson as Employee[])];
+export async function fetchEmployees(): Promise<Employee[]> {
+  const employees = await prisma.employee.findMany({
+    include: {
+      department: true,
+    },
+    orderBy: [
+      { department: { name: "asc" } },
+      { firstName: "asc" },
+      { lastName: "asc" },
+    ],
+  });
 
-const departments: string[] = Array.from(
-  new Set(employees.map((e) => e.department))
-).sort((a, b) => a.localeCompare(b));
-
-export function fetchEmployees(): Employee[] {
-  return employees;
+  return employees.map((employee) => ({
+    firstName: employee.firstName,
+    lastName: employee.lastName ?? undefined,
+    department: employee.department.name,
+  }));
 }
 
-export function fetchDepartments(): string[] {
-  return departments;
+export async function fetchDepartments(): Promise<string[]> {
+  const departments = await prisma.department.findMany({
+    orderBy: { name: "asc" },
+  });
+
+  return departments.map((department) => department.name);
 }
 
-export function createEmployee(employee: Employee): Employee {
-  employees = [...employees, employee];
-  return employee;
+export async function createEmployee(employee: {
+  firstName: string;
+  lastName?: string;
+  department: string;
+}) {
+  const department = await prisma.department.findUnique({
+    where: { name: employee.department },
+  });
+
+  if (!department) {
+    throw new Error("Department not found");
+  }
+
+  return prisma.employee.create({
+    data: {
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      departmentId: department.id,
+    },
+    include: {
+      department: true,
+    },
+  });
 }

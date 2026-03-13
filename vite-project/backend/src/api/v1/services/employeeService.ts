@@ -5,24 +5,24 @@ export type CreateEmployeeResult =
   | { isValid: true; employee: Employee }
   | { isValid: false; field: "firstName" | "department"; errors: string[] };
 
-export function fetchEmployees(): Employee[] {
+export async function fetchEmployees(): Promise<Employee[]> {
   return EmployeeModel.fetchEmployees();
 }
 
-export function fetchDepartments(): string[] {
+export async function fetchDepartments(): Promise<string[]> {
   return EmployeeModel.fetchDepartments();
 }
 
-export function createEmployee(args: {
+export async function createEmployee(args: {
   firstName: string;
   lastName?: string;
   department: string;
-}): CreateEmployeeResult {
+}): Promise<CreateEmployeeResult> {
   const firstName = args.firstName.trim();
   const lastName = args.lastName?.trim() || undefined;
   const department = args.department;
 
-  const departments = EmployeeModel.fetchDepartments();
+  const departments = await EmployeeModel.fetchDepartments();
 
   if (!departments.includes(department)) {
     return {
@@ -40,11 +40,18 @@ export function createEmployee(args: {
     };
   }
 
-  const created = EmployeeModel.createEmployee({
+  const created = await EmployeeModel.createEmployee({
     firstName,
     lastName,
     department,
   });
 
-  return { isValid: true, employee: created };
+  return {
+    isValid: true,
+    employee: {
+      firstName: created.firstName,
+      lastName: created.lastName ?? undefined,
+      department: created.department.name,
+    },
+  };
 }

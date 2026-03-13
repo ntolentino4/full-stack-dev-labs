@@ -5,15 +5,15 @@ export type CreateRoleResult =
   | { isValid: true; role: Role }
   | { isValid: false; field: "firstName" | "role"; errors: string[] };
 
-export function fetchRoles(): Role[] {
+export async function fetchRoles(): Promise<Role[]> {
   return RoleModel.fetchRoles();
 }
 
-export function createRole(args: {
+export async function createRole(args: {
   firstName: string;
   lastName?: string;
   role: string;
-}): CreateRoleResult {
+}): Promise<CreateRoleResult> {
   const firstName = args.firstName.trim();
   const lastName = args.lastName?.trim() || undefined;
   const role = args.role.trim();
@@ -34,7 +34,7 @@ export function createRole(args: {
     };
   }
 
-  if (RoleModel.isRoleOccupied(role)) {
+  if (await RoleModel.isRoleOccupied(role)) {
     return {
       isValid: false,
       field: "role",
@@ -42,8 +42,14 @@ export function createRole(args: {
     };
   }
 
-  const name = lastName ? `${firstName} ${lastName}` : firstName;
-  const created = RoleModel.createRole({ name, role });
+  const created = await RoleModel.createRole({
+    firstName,
+    lastName,
+    role,
+  });
 
-  return { isValid: true, role: created };
+  return {
+    isValid: true,
+    role: created,
+  };
 }
