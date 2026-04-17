@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
+import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import type { Department, Employee } from "../types/directory";
 import { DepartmentSection } from "../components/DepartmentSection";
 import { AddEmployeeForm } from "../components/AddEmployeeForm";
+import { AuthRequiredMessage } from "../components/AuthRequiredMessage";
 import * as EmployeeService from "../services/employeeService";
 
 function groupByDepartment(employees: Employee[]): Department[] {
@@ -46,7 +48,13 @@ export function EmployeesPage() {
         <DepartmentSection key={dept.name} department={dept} />
       ))}
 
-      <AddEmployeeForm onCreated={refresh} />
+      <SignedIn>
+        <AddEmployeeForm onCreated={refresh} />
+      </SignedIn>
+
+      <SignedOut>
+        <AuthRequiredMessage itemLabel="employee" />
+      </SignedOut>
     </main>
   );
 }

@@ -9,14 +9,20 @@ export async function fetchDepartments(): Promise<string[]> {
   return EmployeeRepo.fetchDepartments();
 }
 
-export async function createEmployee(args: {
-  firstName: string;
-  lastName?: string;
-  department: string;
-}) {
-  return EmployeeRepo.createEmployee({
-    firstName: args.firstName.trim(),
-    lastName: args.lastName?.trim() || undefined,
-    department: args.department,
-  });
+export async function createEmployee(
+  args: {
+    firstName: string;
+    lastName?: string;
+    department: string;
+  },
+  sessionToken: string
+) {
+  return EmployeeRepo.createEmployee(
+    {
+      firstName: args.firstName.trim(),
+      lastName: args.lastName?.trim() || undefined,
+      department: args.department,
+    },
+    sessionToken
+  );
 }

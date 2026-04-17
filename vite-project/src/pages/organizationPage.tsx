@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import * as RoleService from "../services/roleService";
 import type { Role } from "../types/role";
 import { AddRoleForm } from "../components/AddRoleForm";
+import { AuthRequiredMessage } from "../components/AuthRequiredMessage";
 
 export function OrganizationPage() {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -42,7 +44,13 @@ export function OrganizationPage() {
         ))}
       </div>
 
-      <AddRoleForm onCreated={refresh} />
+      <SignedIn>
+        <AddRoleForm onCreated={refresh} />
+      </SignedIn>
+
+      <SignedOut>
+        <AuthRequiredMessage itemLabel="role" />
+      </SignedOut>
     </main>
   );
 }

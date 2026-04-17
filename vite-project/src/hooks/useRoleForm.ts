@@ -1,7 +1,10 @@
+import { useAuth } from "@clerk/clerk-react";
 import { useFormInput } from "./userFormInput";
 import * as RoleService from "../services/roleService";
 
 export function useRoleForm() {
+  const { getToken } = useAuth();
+
   const firstName = useFormInput("");
   const lastName = useFormInput("");
   const role = useFormInput("");
@@ -28,11 +31,20 @@ export function useRoleForm() {
     }
 
     try {
-      await RoleService.createRole({
-        firstName: firstName.value,
-        lastName: lastName.value,
-        role: role.value,
-      });
+      const sessionToken = await getToken();
+
+      if (!sessionToken) {
+        throw new Error("Not authenticated.");
+      }
+
+      await RoleService.createRole(
+        {
+          firstName: firstName.value,
+          lastName: lastName.value,
+          role: role.value,
+        },
+        sessionToken
+      );
 
       firstName.setValue("");
       lastName.setValue("");

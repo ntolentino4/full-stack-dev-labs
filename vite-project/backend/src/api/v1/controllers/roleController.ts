@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { getAuth } from "@clerk/express";
 import * as RoleService from "../services/roleService";
 
 export async function getRoles(_req: Request, res: Response) {
@@ -7,7 +8,16 @@ export async function getRoles(_req: Request, res: Response) {
 }
 
 export async function postRole(req: Request, res: Response) {
-  const { firstName, lastName, role } = req.body ?? {};
+  const { isAuthenticated } = getAuth(req);
+
+  if (!isAuthenticated) {
+    return res.status(401).json({
+      isValid: false,
+      errors: ["Unauthorized"],
+    });
+  }
+
+  const { firstName, lastName, role } = req.body;
 
   if (typeof firstName !== "string" || typeof role !== "string") {
     return res.status(400).json({

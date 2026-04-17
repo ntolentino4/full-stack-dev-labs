@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { getAuth } from "@clerk/express";
 import * as EmployeeService from "../services/employeeService";
 
 export async function getEmployees(_req: Request, res: Response) {
@@ -12,7 +13,16 @@ export async function getDepartments(_req: Request, res: Response) {
 }
 
 export async function postEmployee(req: Request, res: Response) {
-  const { firstName, lastName, department } = req.body ?? {};
+  const { isAuthenticated } = getAuth(req);
+
+  if (!isAuthenticated) {
+    return res.status(401).json({
+      isValid: false,
+      errors: ["Unauthorized"],
+    });
+  }
+
+  const { firstName, lastName, department } = req.body;
 
   if (typeof firstName !== "string" || typeof department !== "string") {
     return res.status(400).json({

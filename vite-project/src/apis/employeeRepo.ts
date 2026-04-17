@@ -22,15 +22,19 @@ export async function fetchDepartments(): Promise<string[]> {
   return handleJson<string[]>(response);
 }
 
-export async function createEmployee(args: {
-  firstName: string;
-  lastName?: string;
-  department: string;
-}) {
+export async function createEmployee(
+  args: {
+    firstName: string;
+    lastName?: string;
+    department: string;
+  },
+  sessionToken: string
+) {
   const response = await fetch(`${API_BASE_URL}/employees`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${sessionToken}`,
     },
     body: JSON.stringify(args),
   });
