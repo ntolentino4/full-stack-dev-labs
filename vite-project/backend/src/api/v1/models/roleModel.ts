@@ -1,8 +1,15 @@
+import type { Prisma } from "@prisma/client";
 import prisma from "../../../../prisma/client";
 import type { Role } from "../../../types/role";
 
+type RoleWithOccupant = Prisma.RoleGetPayload<{
+  include: {
+    occupant: true;
+  };
+}>;
+
 export async function fetchRoles(): Promise<Role[]> {
-  const roles = await prisma.role.findMany({
+  const roles: RoleWithOccupant[] = await prisma.role.findMany({
     include: {
       occupant: true,
     },
@@ -12,8 +19,8 @@ export async function fetchRoles(): Promise<Role[]> {
   });
 
   return roles
-    .filter((role) => role.occupant)
-    .map((role) => ({
+    .filter((role: RoleWithOccupant) => role.occupant)
+    .map((role: RoleWithOccupant) => ({
       role: role.title,
       name: role.occupant?.lastName
         ? `${role.occupant.firstName} ${role.occupant.lastName}`
@@ -65,7 +72,7 @@ export async function createRole(newRole: {
     };
   }
 
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const createdRole = await tx.role.create({
       data: {
         title: newRole.role,
