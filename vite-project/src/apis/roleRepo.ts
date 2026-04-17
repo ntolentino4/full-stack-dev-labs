@@ -17,15 +17,19 @@ export async function fetchRoles(): Promise<Role[]> {
   return handleJson<Role[]>(response);
 }
 
-export async function createRole(args: {
-  firstName: string;
-  lastName?: string;
-  role: string;
-}) {
+export async function createRole(
+  args: {
+    firstName: string;
+    lastName?: string;
+    role: string;
+  },
+  sessionToken: string
+) {
   const response = await fetch(`${API_BASE_URL}/roles`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${sessionToken}`,
     },
     body: JSON.stringify(args),
   });

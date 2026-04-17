@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import { useFormInput } from "../hooks/userFormInput";
 import * as EmployeeService from "../services/employeeService";
 
@@ -7,6 +8,8 @@ type Props = {
 };
 
 export function AddEmployeeForm({ onCreated }: Props) {
+  const { getToken } = useAuth();
+
   const [departments, setDepartments] = useState<string[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
 
@@ -15,18 +18,26 @@ export function AddEmployeeForm({ onCreated }: Props) {
   const department = useFormInput("");
 
   useEffect(() => {
-    async function loadDepartments() {
-      const data = await EmployeeService.fetchDepartments();
-      setDepartments(data);
-      department.setValue(data[0] ?? "");
-      setLoadingDepartments(false);
-    }
+  async function loadDepartments() {
+    const data = await EmployeeService.fetchDepartments();
+    setDepartments(data);
+    setLoadingDepartments(false);
+  }
 
-    loadDepartments();
-  }, []);
+  loadDepartments();
+}, []);
+
+useEffect(() => {
+  if (departments.length > 0 && !department.value) {
+    department.setValue(departments[0]);
+  }
+}, [departments, department]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    firstName.setMessages([]);
+    department.setMessages([]);
 
     const firstRequired = firstName.validate((v) =>
       v.trim().length
@@ -40,40 +51,51 @@ export function AddEmployeeForm({ onCreated }: Props) {
         : { isValid: false, errors: ["Department is required."] }
     );
 
-    if (!firstRequired.isValid || !deptRequired.isValid) return;
+    if (!firstRequired.isValid || !deptRequired.isValid) {
+      return;
+    }
 
     try {
-      await EmployeeService.createEmployee({
-        firstName: firstName.value,
-        lastName: lastName.value,
-        department: department.value,
-      });
+      const sessionToken = await getToken();
+
+      if (!sessionToken) {
+        throw new Error("Not authenticated.");
+      }
+
+      await EmployeeService.createEmployee(
+        {
+          firstName: firstName.value,
+          lastName: lastName.value,
+          department: department.value,
+        },
+        sessionToken
+      );
 
       firstName.setValue("");
       lastName.setValue("");
       department.setValue(departments[0] ?? "");
       onCreated();
     } catch (error: unknown) {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "field" in error &&
-    "errors" in error
-  ) {
-    const apiError = error as {
-      field?: string;
-      errors?: string[];
-    };
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "field" in error &&
+        "errors" in error
+      ) {
+        const apiError = error as {
+          field?: string;
+          errors?: string[];
+        };
 
-    if (apiError.field === "firstName") {
-      firstName.setMessages(apiError.errors ?? []);
-    }
+        if (apiError.field === "firstName") {
+          firstName.setMessages(apiError.errors ?? []);
+        }
 
-    if (apiError.field === "department") {
-      department.setMessages(apiError.errors ?? []);
+        if (apiError.field === "department") {
+          department.setMessages(apiError.errors ?? []);
+        }
+      }
     }
-  }
-}
   }
 
   if (loadingDepartments) {
@@ -96,6 +118,7 @@ export function AddEmployeeForm({ onCreated }: Props) {
             onChange={(e) => firstName.setValue(e.target.value)}
           />
         </label>
+
         {firstName.messages.length > 0 && (
           <ul role="alert">
             {firstName.messages.map((msg) => (
@@ -125,6 +148,7 @@ export function AddEmployeeForm({ onCreated }: Props) {
             ))}
           </select>
         </label>
+
         {department.messages.length > 0 && (
           <ul role="alert">
             {department.messages.map((msg) => (
