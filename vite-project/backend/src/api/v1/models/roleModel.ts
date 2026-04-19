@@ -12,13 +12,17 @@ export async function fetchRoles(): Promise<Role[]> {
   });
 
   return roles
-    .filter((role) => role.occupant)
-    .map((role) => ({
-      role: role.title,
-      name: role.occupant?.lastName
-        ? `${role.occupant.firstName} ${role.occupant.lastName}`
-        : role.occupant!.firstName,
-    }));
+    .filter((role) => role.occupant !== null)
+    .map((role) => {
+      const occupant = role.occupant!;
+
+      return {
+        role: role.title,
+        name: occupant.lastName
+          ? `${occupant.firstName} ${occupant.lastName}`
+          : occupant.firstName,
+      };
+    });
 }
 
 export async function isRoleOccupied(roleTitle: string): Promise<boolean> {
