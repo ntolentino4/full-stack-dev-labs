@@ -71,3 +71,43 @@ export default defineConfig([
   },
 ])
 ```
+
+
+## Auth and Application Deployment Lab 5.2 documentation
+
+# What change I wanted to make in my application?
+
+For this lab, I wanted to improve how my application handles data fetching from 
+the backend. Previously, I was using useEffect, useState, and a manual refreshKey 
+system to reload data after changes. While this worked, it was not very scalable 
+and required extra logic to manage updates. I refactored my application to use 
+TanStack Query to manage server state more effectively and reduce the need for 
+manual data synchronization.
+
+## What tools I used to make this change?
+
+I used TanStack Query (@tanstack/react-query) to manage server state in my React 
+application. This library provides hooks such as useQuery for fetching data and 
+invalidateQueries for refreshing data after mutations. I integrated a 
+QueryClientProvider at the root of my app and replaced my existing useEffect 
+calls with useQuery. This allowed me to simplify data fetching logic and improve 
+how my app handles caching and updates.
+
+## How this change affects the user experience?
+
+This change improves the user experience by making the application feel faster 
+and more responsive. Data is now cached automatically, so repeated visits to 
+pages do not require unnecessary network requests. When users add new employees
+or roles, the UI updates immediately through query invalidation, without requiring 
+manual refresh logic. Additionally, loading and error states are handled more 
+cleanly, providing better feedback to users when data is being fetched or if 
+something goes wrong.
+
+## How this change affects my understanding of the application?
+
+This change helped me better understand the difference between client state and 
+server state. Previously, I treated all data as local state, but TanStack Query 
+showed me that server data should be managed differently. I learned how caching, 
+invalidation, and background refetching work, which simplifies application logic 
+and improves performance. This also changed how I think about scaling applications, 
+as managing server state properly becomes more important in larger projects.
