@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Department, Employee } from "../types/directory";
 import { DepartmentSection } from "../components/DepartmentSection";
 import { AddEmployeeForm } from "../components/AddEmployeeForm";
@@ -24,22 +25,29 @@ function groupByDepartment(employees: Employee[]): Department[] {
 }
 
 export function EmployeesPage() {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    async function loadEmployees() {
-      const data = await EmployeeService.fetchEmployees();
-      setEmployees(data);
-    }
-
-    loadEmployees();
-  }, [refreshKey]);
+  const {
+    data: employees = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["employees"],
+    queryFn: EmployeeService.fetchEmployees,
+  });
 
   const departments = useMemo(() => groupByDepartment(employees), [employees]);
 
-  function refresh() {
-    setRefreshKey((k) => k + 1);
+  function refreshEmployees() {
+    queryClient.invalidateQueries({ queryKey: ["employees"] });
+  }
+
+  if (isLoading) {
+    return <main className="container">Loading employees...</main>;
+  }
+
+  if (isError) {
+    return <main className="container">Unable to load employees.</main>;
   }
 
   return (
@@ -49,7 +57,7 @@ export function EmployeesPage() {
       ))}
 
       <SignedIn>
-        <AddEmployeeForm onCreated={refresh} />
+        <AddEmployeeForm onCreated={refreshEmployees} />
       </SignedIn>
 
       <SignedOut>

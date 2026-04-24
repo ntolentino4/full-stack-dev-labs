@@ -1,25 +1,31 @@
-import { useEffect, useState } from "react";
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as RoleService from "../services/roleService";
-import type { Role } from "../types/role";
 import { AddRoleForm } from "../components/AddRoleForm";
 import { AuthRequiredMessage } from "../components/AuthRequiredMessage";
 
 export function OrganizationPage() {
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    async function loadRoles() {
-      const data = await RoleService.fetchRoles();
-      setRoles(data);
-    }
+  const {
+    data: roles = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["roles"],
+    queryFn: RoleService.fetchRoles,
+  });
 
-    loadRoles();
-  }, [refreshKey]);
+  function refreshRoles() {
+    queryClient.invalidateQueries({ queryKey: ["roles"] });
+  }
 
-  function refresh() {
-    setRefreshKey((k) => k + 1);
+  if (isLoading) {
+    return <main className="container">Loading organization...</main>;
+  }
+
+  if (isError) {
+    return <main className="container">Unable to load organization.</main>;
   }
 
   return (
@@ -45,7 +51,7 @@ export function OrganizationPage() {
       </div>
 
       <SignedIn>
-        <AddRoleForm onCreated={refresh} />
+        <AddRoleForm onCreated={refreshRoles} />
       </SignedIn>
 
       <SignedOut>
